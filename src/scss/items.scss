@@ -1,0 +1,232 @@
+@use 'header';
+
+.container{
+    margin: 0px auto;
+    max-width: 1500px;
+    position: relative;
+    .menu-person{
+        width: 190px;
+        background-color: rgb(58, 61, 66);
+        position: absolute;
+        top: 0px;
+        right: 0;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        padding: 30px 12px;
+        @include header.flex(column  , center , center , $gap:.8rem);
+        animation: header.$animation;
+        z-index: 1;
+
+        &::before{
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: 50px; 
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid rgb(58, 61, 66);
+            background: transparent;
+        }
+        .menu-child{
+            width: 100%;
+            color: white;
+            text-decoration: none;
+            @include header.flex(row  , space-between , center , $gap:1.5rem);
+            transition: all .4s;
+
+            padding: 5px 0;
+            p{
+                font-size: 18px;
+            }
+            &:hover{
+                background-color: rgba(199, 199, 199, 0.2);
+            }
+        }
+        
+    }
+    .items{
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
+        gap: 60px 40px;
+        padding: 80px 100px;
+
+        .loading{
+            grid-column: 2/4;
+            width: 100%;
+            @include header.flex(row-reverse,center,center,$gap:20px);
+            p{
+                color: header.$green;
+                font-size: 28px;
+                font-weight: 700;
+            }
+        }
+
+        .item{
+            width: 300px;
+            height: 400px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px #00000015;
+            background-color: white;
+            .img-item{
+                width: 100%;
+                height: 45%;
+                border-radius: 10px 10px 0 0;
+                position: relative;
+                img{
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 10px 10px 0 0;
+                    object-fit: fill;
+
+                }
+                .order-1{
+                    position: absolute;
+                    bottom: 5px;
+                    right: 8px;
+                    @include header.flex(row , center , center);
+                    button{
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50%;
+                        font-size: 20px;
+                        border: none;
+                        background-color: rgb(58, 61, 66);
+                        cursor: pointer;
+                        color: white;
+                        border: 1px solid white;
+                        animation: header.$animation;
+                    }
+                }
+                .order-2{
+                    position: absolute;
+                    bottom: 5px;
+                    right: 8px;
+                    @include header.flex(row-reverse , center , center , $gap: 8px);
+                    background-color: rgba(58, 61, 66,.8);
+                    padding: 5px 10px;
+                    border-radius: 10px;
+                    animation: header.$animation;
+                    button{
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 10px;
+                        font-size: 20px;
+                        border: 1px solid white;
+                        cursor: pointer;
+                        background-color: inherit;
+                        color: white;
+                        @include header.flex(row , center , center);
+                    }
+                    p{
+                        color: white;
+                        font-weight: 500;
+                        font-size: 18px;
+                    }
+                }
+                .saved{
+                    position: absolute;
+                    top: 5px;
+                    right: 8px;
+                    animation: header.$animation;
+                }
+            }
+            .content-item{
+                width: 100%;
+                height: 45%;
+                border-radius: 0 0 10px 10px ;
+                padding: 10px 15px;
+                @include header.flex(column , $gap: 20px);
+
+                .title-price{
+                    width: 100%;
+                    @include header.flex(row , space-between , $gap : 14px);
+                    color: rgb(58, 61, 66);
+                    p{
+                        &:first-child{
+                            font-size: 22px;
+                            font-weight: 600;
+                        }
+
+                        &:last-child{
+                            margin-right: 20px;
+                            font-size: 16px;
+                            color: rgb(166, 170, 173);
+                            i{
+                                margin-left: 10px;
+                                font-weight: 900;
+                            }
+                        }
+                    }
+                }
+
+                .details{
+                    height: 100px;
+                    p{
+                        height: 52px;
+                        word-break: break-all;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 3;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        color: rgb(110, 113, 118);
+                        font-size: 15px;
+                        text-align: justify;
+                    }
+                }
+
+                .order-details{
+                    @include header.flex($gap: 20px);
+                }
+
+                .rate{
+                    @include header.flex($align: center , $gap: 8px);
+
+                    P{
+                        color: header.$blue;
+                    }
+
+                }
+            }
+        }
+    }
+}
+
+
+@media only screen and (max-width: 600px){
+    .container{
+        max-width: 100%;
+         .items{
+            grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+            gap: 30px 20px;
+            padding: 50px 0px;
+            .loading{
+                grid-column: 1/2;
+            }
+            .item{
+                place-self: center;
+            }
+         }
+
+    }
+}
+
+@media only screen and (min-width:600px) and (max-width:1100px){
+    .container{
+        max-width: 100%;
+         .items{
+            grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
+            gap: 30px 20px;
+            padding: 50px 0px;
+            .loading{
+                grid-column: 1/2;
+            }
+            .item{
+                place-self: center;
+            }
+         }
+
+    }
+}

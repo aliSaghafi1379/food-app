@@ -1,0 +1,161 @@
+@use 'header';
+
+.container-shop{
+    width: 100%;
+    @include header.flex(column,$align:center);
+    .buy-list{
+        width: 60%;
+        margin-top: 30px;
+        padding: 1rem;
+        background-color: white;
+        color: rgb(58, 61, 66);
+        &:first-child{
+            tr th{
+                border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+                padding-bottom: 30px;
+            }
+        }
+        
+        .buy-item{
+            td{
+                border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+                &:nth-child(5){
+                    border-right: none;
+                }
+                &:first-child{
+                    width: 180px;
+                    img{
+                        width: 150px;
+                        height: 150px;
+                        object-fit: cover;
+                        border-radius: 10px;
+                    }
+                }
+                p {
+                    text-align: center;
+                    font-size: 18px;
+                }
+                .order{
+                    @include header.flex(row , center , center , $gap:5px);
+                    button{
+                        background-color: header.$blue;
+                        color: white;
+                        border: none;
+                        font-size: 16px;
+                        width: 25px;
+                        height: 25px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    }
+                }
+            }
+            
+        }
+    }
+    .pay{
+            width: 60%;
+            background-color: white;
+            @include header.flex(row , center , center);
+            padding: 30px 0;
+            color: white;
+            .pay-box{
+                background-color: rgb(58, 61, 66);
+                border-radius: 5px;
+                width: 50%;
+                padding: 20px 80px;
+                @include header.flex(column , $align:center ,$gap:10px);
+                span{
+                    width: 100%;
+                    @include header.flex(row , space-between);
+                    padding-bottom: 10px;
+                    p{
+                        font-size: 18px;
+                    }
+                    button{
+                        width: 100%;
+                        background-color: white;
+                        color: header.$blue;
+                        font-size: 16px;
+                        font-weight: 600;
+                        border: none;
+                        padding: 10px 0;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    }
+                }
+            }
+        }
+}
+
+@media only screen and (max-width: 600px){
+    .container-shop{
+        .buy-list{
+            width: 100%;
+            padding: 1rem .2rem;
+            
+            .buy-item{
+                td{
+                    &:first-child{
+                        width: 100px;
+                        img{
+                            width: 100px;
+                            height: 100px;
+                        }
+                    }
+                    p {
+                        font-size: 16px;
+                    }
+                    .order{
+                        button{
+                            width: 22px;
+                            height: 22px;
+                        }
+                    }
+                }
+                
+            }
+        }
+        .pay{
+                width: 100%;
+                .pay-box{
+                    width: 100%;
+                }
+            }
+    }
+}
+@media only screen and (min-width: 600px) and (max-width: 1000px){
+    .container-shop{
+        .buy-list{
+            width: 100%;
+            padding: 1rem .2rem;
+            
+            .buy-item{
+                td{
+                    &:first-child{
+                        width: 100px;
+                        img{
+                            width: 100px;
+                            height: 100px;
+                        }
+                    }
+                    p {
+                        font-size: 16px;
+                    }
+                    .order{
+                        button{
+                            width: 22px;
+                            height: 22px;
+                        }
+                    }
+                }
+                
+            }
+        }
+        .pay{
+                width: 100%;
+                .pay-box{
+                    width: 50%;
+                }
+            }
+    }
+}
