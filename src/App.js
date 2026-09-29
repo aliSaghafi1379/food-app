@@ -4,8 +4,11 @@ import Items from "./components/Items";
 const App = () => {
   return (
     <>
+   {/*
       <Header />
       <Items />
+    */}
+       <h1>HELLO</h1>
     </>
   );
 };
