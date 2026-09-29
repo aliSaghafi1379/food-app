@@ -1,5 +1,5 @@
-import Header from "./components/Header";
-import Items from "./components/Items";
+//import Header from "./components/Header";
+//import Items from "./components/Items";
 
 const App = () => {
   return (
