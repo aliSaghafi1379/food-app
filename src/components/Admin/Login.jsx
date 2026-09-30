@@ -106,7 +106,7 @@ const Login = (props) => {
 
       <div className="input-box">
         <p className="sign-up">
-          Don't have an account ? <a onClick={props.changedLogin}>Sign up</a>
+          Don't have an account ? <button type="button" onClick={props.changedLogin}>Sign up</button>
         </p>
       </div>
       <input type="submit" value="Submit" className="input-submit" />

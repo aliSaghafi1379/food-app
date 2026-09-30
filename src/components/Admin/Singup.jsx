@@ -21,7 +21,6 @@ const SignUp = (props) => {
     setEmail,
     password,
     setPassword,
-    todos,
     infoPerson,
     singEmailError,
     setSingEmailError,
@@ -286,7 +285,7 @@ const SignUp = (props) => {
 
       <div className="input-box">
         <p className="sign-up">
-          Have an account ? <a onClick={props.changedLogin}>Log in</a>
+          Have an account ? <button type="button" onClick={props.changedLogin}>Log in</button>
         </p>
       </div>
       <input type="submit" value="Submit" className="input-submit" />

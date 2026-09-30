@@ -21,7 +21,6 @@ const Items = () => {
     loginEnter,
     add,
     remove,
-    personValue,
     menuPerson,
     setMenuPerson,
     handleOpen,
