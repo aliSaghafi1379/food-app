@@ -11,15 +11,15 @@ import NotFound from "./components/notFound";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
-    <Contexts>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/create" element={<Create />} />
-          <Route path="/" element={<App />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+ <React.StrictMode>
+  <Contexts>
+    <BrowserRouter>
+       <Routes>
+         <Route path="/create" element={<Create />} />
+         <Route path="/" element={<App />} />
+         <Route path="/shop" element={<Shop />} />
+         <Route path="*" element={<NotFound />} />
+       </Routes>
       </BrowserRouter>
     </Contexts>
   </React.StrictMode>
