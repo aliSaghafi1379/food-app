@@ -1,13 +1,10 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import AlternateEmailOutlinedIcon from "@mui/icons-material/AlternateEmailOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import { ref, set } from "firebase/database";
-import { db } from "../../firebase";
-import { v4 as uuidv4 } from "uuid";
+import { supabase } from "../../supabase";
 import { useContext, useEffect } from "react";
 import { myContexts } from "../../contexts";
 import Swal from "sweetalert2/dist/sweetalert2.js";
@@ -15,6 +12,7 @@ import "sweetalert2/src/sweetalert2.scss";
 
 const SignUp = (props) => {
   const {
+    setLoginEnter,
     setUserName,
     userName,
     fullName,
@@ -45,9 +43,9 @@ const SignUp = (props) => {
   const findElementEmail = infoPerson.find((el) => {
     return el.email === email;
   });
-  const id = uuidv4();
+  // const id = uuidv4();
 
-  const submitInfo = (e) => {
+  const submitInfo =async (e) => {
     e.preventDefault();
     if (
       !findElementUserName &&
@@ -56,26 +54,43 @@ const SignUp = (props) => {
       !singPasswordError &&
       !singUserNameError
     ) {
-      set(ref(db, `/InfoPerson/${userName}`), {
-        id,
-        userName,
-        fullName,
-        email,
-        password,
-      });
-      if (todos) {
-        // eslint-disable-next-line array-callback-return
-        todos.map((todo) => {
-          set(ref(db, `/InfoPerson/${userName}/Items/${todo.id}`), {
-            id: todo.id,
-            title: todo.title,
-            url: todo.url,
-            price: todo.price,
-            details: todo.details,
-            count: todo.count,
-            // saved: todo.saved,
-          });
+      const { data: existingUser, error: checkError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("username", userName)
+          .maybeSingle();
+
+        if (checkError) {
+          setSingUserNameError("Could not check username");
+          return;
+        }
+
+        if (existingUser) {
+          setSingUserNameError("This username is already taken");
+          return;
+        }
+      const { data, error } = await supabase.auth.signUp({
+              email,
+            password,
         });
+
+      if (error) {
+          setSingEmailError("This email is already taken")
+      }
+      const user = data.user;
+
+      const { error: profileError } = await supabase
+        .from("users")
+        .insert({
+          id: user.id,
+          username: userName,
+          full_name: fullName,
+          email: email,
+        });
+
+      if (profileError) {
+        setSingUserNameError('This user name is already taken')
+        return;
       }
       setUserName("");
       setFullName("");
@@ -84,6 +99,7 @@ const SignUp = (props) => {
       setSingUserNameError("");
       setSingEmailError("");
       setSingPasswordError("");
+      setLoginEnter(userName);
       setOpen(false);
       Swal.fire({
         title: "SUCCESSFULLY",
@@ -186,7 +202,7 @@ const SignUp = (props) => {
           value={userName}
           required
         />
-        <label for="userName" className="label">
+        <label htmlFor="userName" className="label">
           User name
         </label>
         <PersonOutlineOutlinedIcon className="icon" />
@@ -207,7 +223,7 @@ const SignUp = (props) => {
           value={fullName}
           required
         />
-        <label for="fullName" className="label">
+        <label htmlFor="fullName" className="label">
           Full name
         </label>
         <BadgeOutlinedIcon className="icon" />
@@ -221,7 +237,7 @@ const SignUp = (props) => {
           value={email}
           required
         />
-        <label for="email" className="label">
+        <label htmlFor="email" className="label">
           Email
         </label>
         <AlternateEmailOutlinedIcon className="icon" />
@@ -242,7 +258,7 @@ const SignUp = (props) => {
           value={password}
           required
         />
-        <label for={`${show ? "text" : "password"}`} className="label">
+        <label htmlFor={`${show ? "text" : "password"}`} className="label">
           Password
         </label>
         <span className="icon show-password">

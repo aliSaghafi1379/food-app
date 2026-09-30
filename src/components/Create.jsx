@@ -1,10 +1,7 @@
-import { ref, set } from "firebase/database";
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef, useState , useEffect} from "react";
 import { v4 as uuidv4 } from "uuid";
-import { db, storage } from "../firebase";
 import { myContexts } from "../contexts";
-import { getDownloadURL, uploadBytes } from "firebase/storage";
-import { ref as sRef } from "firebase/storage";
+import { supabase } from "../supabase";
 import "../scss/create.scss";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import "sweetalert2/src/sweetalert2.scss";
@@ -17,62 +14,91 @@ const Create = () => {
     setPrice,
     details,
     setDetails,
-    count,
-    infoPerson,
   } = useContext(myContexts);
 
   const imageUpload = useRef(null);
   const [upload, setUpload] = useState(null);
+  const ADMIN_ID = "3658c665-e6c9-4c3c-9c87-5ed334c94376";
+  const [user, setUser] = useState(null);
+  const [checkingUser, setCheckingUser] = useState(true);
 
-  const CreateNewItem = (e) => {
+  useEffect(() => {
+  const checkUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    setUser(user);
+    setCheckingUser(false);
+  };
+
+  checkUser();
+}, []);
+
+  const CreateNewItem = async (e) => {
     e.preventDefault();
-    const id = uuidv4();
-    if (upload == null) return;
-    const imgRef = sRef(storage, `images/${upload.name}`);
-    uploadBytes(imgRef, upload).then(() => {
-      getDownloadURL(imgRef).then(
-        (url) => {
-          set(ref(db, `/Items/${id}`), {
-            id,
-            title,
-            url,
-            price,
-            details,
-            count,
-            saved: false,
-          });
-          if (infoPerson) {
-            // eslint-disable-next-line array-callback-return
-            infoPerson.map((infoo) => {
-              set(ref(db, `/InfoPerson/${infoo.userName}/Items/${id}`), {
-                id,
-                title,
-                url,
-                price,
-                details,
-                count,
-              });
-            });
-          }
 
-          setTitle("");
-          setPrice("");
-          setDetails("");
-          if (imageUpload.current) {
-            imageUpload.current.value = "";
-            imageUpload.current.type = "text";
-            imageUpload.current.type = "file";
-          }
-        },
-        Swal.fire({
-          title: "SUCCESSFULLY",
-          // text: "Do you want to continue",
-          icon: "success",
-        })
-      );
+    if (!upload) return;
+
+    const id = uuidv4();
+    const fileName = `${id}-${upload.name}`;
+
+    // 1. Upload image
+    const { error: uploadError } = await supabase.storage
+      .from("images")
+      .upload(fileName, upload);
+
+    if (uploadError) {
+      console.error("UPLOAD IMAGE ERROR:", uploadError);
+      return;
+    }
+
+    // 2. Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from("images")
+      .getPublicUrl(fileName);
+
+    const url = publicUrlData.publicUrl;
+
+    console.log("FINAL IMAGE URL:", url);
+
+    // 3. Save product + image URL in items
+    const { error: itemError } = await supabase
+      .from("items")
+      .insert({
+        title,
+        price: Number(price),
+        details,
+        url,
+      });
+
+    if (itemError) {
+      console.error("CREATE ITEM ERROR:", itemError);
+      return;
+    }
+
+    // 4. Clear form
+    setTitle("");
+    setPrice("");
+    setDetails("");
+
+    if (imageUpload.current) {
+      imageUpload.current.value = "";
+    }
+
+    Swal.fire({
+      title: "SUCCESSFULLY",
+      icon: "success",
     });
   };
 
+  if (checkingUser) {
+    return <p>Loading...</p>;
+  }
+
+  if (!user || user.id !== ADMIN_ID) {
+    return <a href="/" style={{color: "red" , fontSize: "20px" , marginTop:"150px" , display:"block"}}>You don't have permission to access this page. 🔒</a>;
+  }
   return (
     <div className="container-create">
       <div className="row-create">

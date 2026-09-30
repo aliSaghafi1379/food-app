@@ -1,6 +1,5 @@
-import { onValue, ref, update } from "firebase/database";
 import { createContext, useEffect, useState } from "react";
-import { db } from "./firebase";
+import { supabase } from "./supabase";
 
 export const myContexts = createContext({
   todos: [],
@@ -53,6 +52,8 @@ export const myContexts = createContext({
   setSingUserNameError: [],
   show: [],
   setShow: [],
+  sessionData:[],
+  setSessionData:[]
 });
 
 const Contexts = ({ children }) => {
@@ -80,57 +81,260 @@ const Contexts = ({ children }) => {
   const [open, setOpen] = useState(false);
   const [menuPerson, setMenuPerson] = useState(false);
   const [show, setShow] = useState(false);
+  const [session, setSession] = useState(null);
+  const [authLoading , setAuthLoading]=useState(true)
 
+
+  // Sessions
   useEffect(() => {
-    onValue(ref(db, "/Items"), (snapshot) => {
-      setTodos([]);
-      const data = snapshot.val();
-      if (data !== null) {
-        // eslint-disable-next-line array-callback-return
-        Object.values(data).map((todo) => {
-          setTodos((oldArray) => [...oldArray, todo]);
-        });
-        setLoading(false);
+    const loadAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      setSession(session);
+
+      if (!session) {
+        setInfoPerson([]);
+        setLoginEnter("");
+        setAuthLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error) {
+        console.error("GET PROFILE ERROR:", error);
+        setAuthLoading(false);
+        return;
+      }
+
+      setInfoPerson([data]);
+      setLoginEnter(data.username);
+      setUserName(data.username);
+      setFullName(data.full_name);
+      setEmail(data.email);
+
+      setAuthLoading(false);
+    };
+
+    loadAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+
+      if (event === "SIGNED_OUT") {
+        setInfoPerson([]);
+        setLoginEnter("");
+        setUserName("");
+        setFullName("");
+        setEmail("");
+        setAuthLoading(false);
       }
     });
-  }, [setLoading, setTodos]);
 
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // گرفتن غذاها از Supabase
   useEffect(() => {
-    onValue(ref(db, "/InfoPerson"), (snapshot) => {
-      setInfoPerson([]);
-      const data = snapshot.val();
-      if (data !== null) {
-        // eslint-disable-next-line array-callback-return
-        Object.values(data).map((infoo) => {
-          setInfoPerson((oldArray) => [...oldArray, infoo]);
-        });
+    const getItems = async () => {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("items")
+        .select("*")
+        .order("id", { ascending: true });
+
+      if (error) {
+        console.error("GET ITEMS ERROR:", error);
+        setTodos([]);
+      } else {
+        setTodos(data || []);
+        if (data && data.length > 0) {
+            setLoading(false);
+                }
       }
-    });
-  }, [setInfoPerson]);
+    };
 
-  const findElement = infoPerson.find((el) => {
-    return el.userName === loginEnter;
-  });
+    getItems();
+  }, []);
 
+  // کاربر فعلی
+  const findElement = infoPerson[0]
+
+  // گرفتن سبد خرید کاربر
   useEffect(() => {
-    if (findElement) {
-      setPersonValue(Object.values(findElement.Items));
+      const getCart = async () => {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const user = session?.user;
+
+        // اگر کاربر لاگ‌اوت است
+        if (!user) {
+          setPersonValue([]);
+
+          setTodos((oldTodos) =>
+            oldTodos.map((item) => ({
+              ...item,
+              count: 0,
+            }))
+          );
+
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("cart_items")
+          .select(`
+            count,
+            item_id,
+            items (*)
+          `)
+          .eq("user_id", user.id);
+
+        if (error) {
+          console.error("GET CART ERROR:", error);
+          setPersonValue([]);
+          return;
+        }
+
+        const cart = (data || []).map((item) => ({
+          ...item.items,
+          count: item.count,
+        }));
+
+        setPersonValue(cart);
+
+        // تعدادهای کاربر فعلی را روی محصولات اعمال می‌کنیم
+        setTodos((oldTodos) =>
+          oldTodos.map((item) => {
+            const cartItem = cart.find(
+              (cartProduct) => cartProduct.id === item.id
+            );
+
+            return {
+              ...item,
+              count: cartItem ? cartItem.count : 0,
+            };
+          })
+        );
+      };
+
+      getCart();
+    }, [loginEnter]);
+
+  // اضافه کردن به سبد
+  const add = async (id, countItem) => {
+    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const newCount = (countItem ?? 0) + 1 ;
+
+    const { error } = await supabase
+      .from("cart_items")
+      .upsert(
+        {
+          user_id: user.id,
+          item_id: id,
+          count: newCount,
+        },
+        {
+          onConflict: "user_id,item_id",
+        }
+      );
+
+    if (error) {
+      console.error("ADD CART ERROR:", error);
+      return;
     }
-  }, [findElement]);
 
-  const add = (id, countItem) => {
-    const plus = countItem + 1;
-    update(ref(db, `/InfoPerson/${findElement.userName}/Items/${id}`), {
-      count: plus,
-    });
-  };
-  const remove = (id, countItem) => {
-    const low = countItem - 1;
-    if (low >= 0) {
-      update(ref(db, `/InfoPerson/${findElement.userName}/Items/${id}`), {
-        count: low,
+    setPersonValue((oldArray) => {
+        const exists = oldArray.some((item) => item.id === id);
+
+        if (exists) {
+          return oldArray.map((item) =>
+            item.id === id
+              ? { ...item, count: newCount }
+              : item
+          );
+        }
+
+        const product = todos.find((item) => item.id === id);
+
+        if (!product) return oldArray;
+
+        return [
+          ...oldArray,
+          {
+            ...product,
+            count: newCount,
+          },
+        ];
       });
+      setTodos((oldTodos) =>
+          oldTodos.map((item) =>
+            item.id === id
+              ? { ...item, count: newCount }
+              : item
+          )
+        );
+  };
+
+  // کم کردن از سبد
+  const remove = async (id, countItem) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const newCount = countItem - 1;
+
+    if (newCount < 0) return;
+
+    const { error } = await supabase
+      .from("cart_items")
+      .update({
+        count: newCount,
+      })
+      .eq("user_id", user.id)
+      .eq("item_id", id);
+
+    if (error) {
+      console.error("REMOVE CART ERROR:", error);
+      return;
     }
+
+    setPersonValue((oldArray) =>
+      oldArray.map((item) =>
+        item.id === id
+          ? { ...item, count: newCount }
+          : item
+      )
+    );
+
+    setTodos((oldTodos) =>
+        oldTodos.map((item) =>
+          item.id === id
+            ? { ...item, count: newCount }
+            : item
+        )
+      );
   };
 
   const handleOpen = () => setOpen(true);
@@ -192,6 +396,10 @@ const Contexts = ({ children }) => {
         setSingUserNameError,
         show,
         setShow,
+        session,
+        setSession,
+        authLoading,
+        setAuthLoading
       }}
     >
       {children}

@@ -1,50 +1,60 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable react/jsx-no-comment-textnodes */
+
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useContext } from "react";
 import { myContexts } from "../../contexts";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import "sweetalert2/src/sweetalert2.scss";
+import { supabase } from "../../supabase";
+
 const Login = (props) => {
   const {
     loginText,
     setLoginText,
     loginPassword,
     setLoginPassword,
-    infoPerson,
     loginError,
     setLoginError,
     setLoginEnter,
     setOpen,
   } = useContext(myContexts);
 
-  const SubmitLogin = (e) => {
+  const SubmitLogin =async (e) => {
     e.preventDefault();
-    const findElement = infoPerson.find((el) => {
-      return el.userName === loginText;
-    });
-    if (findElement) {
-      if (
-        findElement.userName === loginText &&
-        findElement.password === loginPassword
-      ) {
-        setLoginEnter(findElement.userName);
-        setLoginError("");
-        setOpen(false);
-        Swal.fire({
-          title: "SUCCESSFULLY",
-          html: `Welcome <i style="color:green ; margin: 0 5px">${findElement.fullName}</i> to Food App`,
-          icon: "success",
-          color: "rgb(58, 61, 66)",
-          confirmButtonColor: "rgb(58, 61, 66)",
-        });
-      } else {
-        setLoginError("The user name or password is wrong");
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginText,
+        password: loginPassword,
+      });
+
+      if (error) {
+        console.error("LOGIN ERROR:", error);
+        setLoginError("The email or password is wrong");
+        return;
       }
-    } else {
-      setLoginError("The user name or password is wrong");
-    }
+
+      const { data: profile, error: profileError } = await supabase
+                  .from("users")
+                  .select("username, full_name")
+                  .eq("id", data.user.id)
+                  .single();
+
+      if (profileError) {
+              console.error("PROFILE ERROR:", profileError);
+               return;
+          }
+
+    setLoginEnter(profile.username);
+
+     setLoginError("");
+      setOpen(false);
+
+      Swal.fire({
+        title: "SUCCESSFULLY",
+        html: `Welcome to <i style="color:green; margin: 0 5px">Food App</i>`,
+        icon: "success",
+        color: "rgb(58, 61, 66)",
+        confirmButtonColor: "rgb(58, 61, 66)",
+      });
   };
   return (
     <form
@@ -59,15 +69,15 @@ const Login = (props) => {
       </div>
       <div className="input-box">
         <input
-          type="text"
-          id="userName"
+          type="email"
+          id="email"
           className={`input-field ${loginError ? "border-error" : ""}`}
           onChange={(e) => setLoginText(e.target.value)}
           value={loginText}
           required
         />
-        <label for="userName" className="label">
-          User name
+        <label htmlFor="email" className="label">
+          Email
         </label>
         <PersonOutlineOutlinedIcon className="icon" />
       </div>
@@ -81,7 +91,7 @@ const Login = (props) => {
           value={loginPassword}
           required
         />
-        <label for="passWord" className="label">
+        <label htmlFor="passWord" className="label">
           Password
         </label>
         <LockOutlinedIcon className="icon" />

@@ -1,4 +1,5 @@
 import "../scss/header.scss";
+import { CircularProgress } from "@mui/material";
 import FoodBankSharpIcon from "@mui/icons-material/FoodBankSharp";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import SearchIcon from "@mui/icons-material/Search";
@@ -26,6 +27,7 @@ const Header = () => {
     loginEnter,
     setMenuPerson,
     menuPerson,
+    authLoading,
   } = useContext(myContexts);
 
   const searchFilter = (e) => {
@@ -74,7 +76,13 @@ const Header = () => {
         </form>
         <div className="header-right">
           <span className="log">
-            {loginEnter ? (
+          {authLoading ? (
+            <p className="flex justify-center items-center">
+              <CircularProgress sx={{ color: "rgb(58, 61, 66)" }} size={15} />
+            </p>
+            
+          ) :
+           ( loginEnter ? (
               <p
                 className="loginEnter"
                 onClick={() => setMenuPerson(!menuPerson)}
@@ -83,7 +91,7 @@ const Header = () => {
               </p>
             ) : (
               <p>Guest</p>
-            )}
+            ))}
             <Admin />
           </span>
           <span className="shop">

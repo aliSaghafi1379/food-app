@@ -11,6 +11,7 @@ import ShoppingCartTwoToneIcon from "@mui/icons-material/ShoppingCartTwoTone";
 import ExitToAppTwoToneIcon from "@mui/icons-material/ExitToAppTwoTone";
 import BookmarkTwoToneIcon from "@mui/icons-material/BookmarkTwoTone";
 import { Link } from "react-router-dom";
+import { supabase } from "../supabase";
 
 const Items = () => {
   const {
@@ -23,8 +24,8 @@ const Items = () => {
     personValue,
     menuPerson,
     setMenuPerson,
-    setLoginEnter,
     handleOpen,
+    setLoginEnter,
   } = useContext(myContexts);
 
   return (
@@ -43,7 +44,12 @@ const Items = () => {
             <p>Shopping</p>
             <ShoppingCartTwoToneIcon />
           </Link>
-          <a className="menu-child" onClick={() => setLoginEnter("")} href="/">
+          <a className="menu-child" href="/" onClick={async (e)=> {
+                  e.preventDefault();
+                  await supabase.auth.signOut();
+                  setLoginEnter("");
+                  setMenuPerson(false)
+          }} >
             <p>Exit</p>
             <ExitToAppTwoToneIcon />
           </a>
@@ -59,15 +65,13 @@ const Items = () => {
           </div>
         )}
         {/* !newSearch.length > 0 ? todos : newSearch */}
-        {(!newSearch.length > 0
-          ? loginEnter === ""
-            ? todos
-            : personValue
-          : newSearch
+        {(newSearch.length > 0
+          ? newSearch
+          : todos
         ).map((todo) => (
           <div className="item" key={todo.id}>
             <div className="img-item">
-              <img src={todo.url} alt="" />
+              <img src={todo.url} alt="1" />
 
               {todo.count > 0 ? (
                 <span className="order-2">
